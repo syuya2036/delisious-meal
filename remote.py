@@ -1,4 +1,5 @@
 import sys
+import os
 print(sys.executable)
 import socket
 import threading
@@ -32,6 +33,7 @@ layout = [
     ],
 ]
 window = sg.Window("My Drone", layout)
+
 
 
 class Info:
@@ -127,25 +129,10 @@ state_receive_thread.start()
 
 def receive_video():
     cap = cv2.VideoCapture("udp://0.0.0.0:11111?overrun_nonfatal=1")
-    """"
-    #############################################################
-    output_folder = "C:/Users/81809/Documents/tello/video" 
-    frame_count = 0                                
-    #############################################################
-    """
     while info.is_active():
         success, image = cap.read()
         if not success:
             continue
-        """"
-        ###############################################################
-        if frame_count % 100 == 0:
-            file_name = f"{output_folder}/frame_{frame_count//100:04d}.jpg"
-            cv2.imwrite(file_name, image)
-        frame_count += 1
-        time.sleep(1)
-        ###########################################################
-"""
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         info.set_image(image)
         out.write(image)
@@ -153,10 +140,26 @@ def receive_video():
     cap.release()
     out.release()
 
-
 video_receive_thread = threading.Thread(target=receive_video)
 video_receive_thread.start()
 
+
+# 画像を定期的に保存するための関数
+def save_images():
+    while info.is_active():
+        image = info.get_image()
+        if image is not None:
+            image_save_dir = 'img/'
+            # ディレクトリが存在しない場合に作成
+            if not os.path.exists(image_save_dir):
+                os.makedirs(image_save_dir)
+            timestamp = int(time.time())  # 画像のファイル名に現在のタイムスタンプを使用
+            image_filename = f'img/image_{timestamp}.jpg'
+            cv2.imwrite(image_filename, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        time.sleep(5)  # 画像のキャプチャ間隔を必要に応じて調整してください
+
+save_images_thread = threading.Thread(target=save_images)
+save_images_thread.start()
 
 def send_command():
     while info.is_active():
