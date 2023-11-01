@@ -157,6 +157,7 @@ def save_images():
             image_filename = f'img/image_{timestamp}.jpg'
             cv2.imwrite(image_filename, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
         time.sleep(5)  # 画像のキャプチャ間隔を必要に応じて調整してください
+        
 
 save_images_thread = threading.Thread(target=save_images)
 save_images_thread.start()
