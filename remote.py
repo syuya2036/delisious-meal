@@ -7,7 +7,8 @@ import time
 import cv2
 import numpy as np
 import PySimpleGUI as sg
-from PIL import Image, ImageTk
+from PIL import Image, ImageTkf
+import 
 
 # キャプチャする映像ストリームの保存先ファイル名
 output_file = 'captured_video.mp4'
