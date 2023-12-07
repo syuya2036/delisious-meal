@@ -5,10 +5,11 @@ import socket
 import threading
 import time
 import cv2
+import datetime
+import subprocess
 import numpy as np
 import PySimpleGUI as sg
-from PIL import Image, ImageTkf
-import 
+from PIL import Image, ImageTk
 
 # キャプチャする映像ストリームの保存先ファイル名
 output_file = 'captured_video.mp4'
@@ -16,6 +17,8 @@ output_file = 'captured_video.mp4'
 # キャプチャする映像ストリームの設定
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter(output_file, fourcc, 20.0, (640, 480))
+
+ip = "192.168.102.90"
 
 DISPLAY_SIZE = (800, 600)
 layout = [
@@ -105,9 +108,9 @@ def __get_drone_state(data):
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind(("", 8889))
 
-sock.sendto("command".encode(), ("192.168.10.1", 8889))
+sock.sendto("command".encode(), (f"{ip}", 8889))
 sock.recvfrom(1024)
-sock.sendto("streamon".encode(), ("192.168.10.1", 8889))
+sock.sendto("streamon".encode(), (f"{ip}", 8889))
 sock.recvfrom(1024)
 
 state_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -147,17 +150,19 @@ video_receive_thread.start()
 
 # 画像を定期的に保存するための関数
 def save_images():
+    now = datetime.datetime.now()
+    current_time = now.strftime("%Y-%m-%d-%H-%M-%s")
+    image_save_dir = 'object_recognition/car/img/' + current_time
+    # ディレクトリが存在しない場合に作成
+    if not os.path.exists(image_save_dir):
+        os.makedirs(image_save_dir)
     while info.is_active():
         image = info.get_image()
         if image is not None:
-            image_save_dir = 'img/'
-            # ディレクトリが存在しない場合に作成
-            if not os.path.exists(image_save_dir):
-                os.makedirs(image_save_dir)
             timestamp = int(time.time())  # 画像のファイル名に現在のタイムスタンプを使用
-            image_filename = f'img/image_{timestamp}.jpg'
+            image_filename = f'{image_save_dir}/image_{timestamp}.jpg'
             cv2.imwrite(image_filename, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-        time.sleep(5)  # 画像のキャプチャ間隔を必要に応じて調整してください
+        time.sleep(0.5)  # 0.5だと1秒に1枚ぐらいで保存
         
 
 save_images_thread = threading.Thread(target=save_images)
@@ -170,7 +175,7 @@ def send_command():
         if msg == "":
             continue
 
-        sock.sendto(msg.encode(), ("192.168.10.1", 8889))
+        sock.sendto(msg.encode(), (f"{ip}", 8889))
         info.set_command_result("")
         info.set_sent_command(msg)
         start = time.time()
@@ -185,7 +190,7 @@ while True:
     msg = ""
     event, values = window.read(timeout=1)
     window["state"].update(f'battery: {info.get_state("bat"):.1f}%')
-    tello_address = ('192.168.10.1', 8889)                            ##################
+    tello_address = (f'{ip}', 8889)                            ##################
 
 
     image = info.get_image()
@@ -199,6 +204,8 @@ while True:
     window["image"].update(data=photoImage)
 
     if event == sg.WINDOW_CLOSED or event == "Quit":
+        # Execute detect.py on Quit
+        subprocess.run(["python", "./object_recognition/car/yolov5/detect.py"])
         break
     if event == "OK":
         msg = values[0]
