@@ -25,8 +25,10 @@ $ pip install -r requirements.txt
 ### 4. yolo インストール
 object_recognition/carにyolov5をクローンして下さい．
 '''
-$ cd object/recognition/car
+$ cd object_recognition/car
+'''
 
+'''
 $ git clone https://github.com/ultralytics/yolov5
 '''
 

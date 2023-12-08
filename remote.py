@@ -18,7 +18,7 @@ output_file = 'captured_video.mp4'
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter(output_file, fourcc, 20.0, (640, 480))
 
-ip = "192.168.102.90"
+ip = "192.168.10.1"
 
 DISPLAY_SIZE = (800, 600)
 layout = [
@@ -146,12 +146,11 @@ def receive_video():
 
 video_receive_thread = threading.Thread(target=receive_video)
 video_receive_thread.start()
-
+now = datetime.datetime.now()
+current_time = now.strftime("%Y-%m-%d-%H-%M-%s")
 
 # 画像を定期的に保存するための関数
 def save_images():
-    now = datetime.datetime.now()
-    current_time = now.strftime("%Y-%m-%d-%H-%M-%s")
     image_save_dir = 'object_recognition/car/img/' + current_time
     # ディレクトリが存在しない場合に作成
     if not os.path.exists(image_save_dir):
@@ -183,6 +182,20 @@ def send_command():
         info.set_command_result(f"{data.decode()} {time.time() - start:.1f}")
 
 
+
+def disconnect_wifi_mac(interface_name="Wi-Fi"):
+    subprocess.run(['networksetup', '-setairportpower', interface_name, 'off'], check=True)
+    time.sleep(2)
+    subprocess.run(['networksetup', '-setairportpower', interface_name, 'on'], check=True)
+    time.sleep(2)
+
+
+def disconnect_wifi_windows(interface_name="Wi-Fi"):
+    subprocess.run(['netsh', 'interface', 'set', 'interface', interface_name, 'admin=disable'], check=True)
+    time.sleep(2)
+    subprocess.run(['netsh', 'interface', 'set', 'interface', interface_name, 'admin=enable'], check=True)
+    time.sleep(2)
+
 command_send_thread = threading.Thread(target=send_command)
 command_send_thread.start()
 
@@ -205,7 +218,12 @@ while True:
 
     if event == sg.WINDOW_CLOSED or event == "Quit":
         # Execute detect.py on Quit
-        subprocess.run(["python", "./object_recognition/car/yolov5/detect.py"])
+        try:
+            disconnect_wifi_windows()
+        except:
+            disconnect_wifi_mac()
+        
+        subprocess.run(["python", "./object_recognition/car/yolov5/detect.py", "--source", f"./object_recognition/car/img/{current_time}"])
         break
     if event == "OK":
         msg = values[0]
