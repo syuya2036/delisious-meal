@@ -36,6 +36,8 @@ import sys
 from pathlib import Path
 import torch
 import requests
+import subprocess
+
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -105,6 +107,7 @@ def run(
 
     # Dataloader
     bs = 1  # batch_size
+    count = 0
     if webcam:
         view_img = check_imshow(warn=True)
         dataset = LoadStreams(source, img_size=imgsz, stride=stride, auto=pt, vid_stride=vid_stride)
@@ -167,9 +170,12 @@ def run(
             imc = im0.copy() if save_crop else im0  # for save_crop
             annotator = Annotator(im0, line_width=line_thickness, example=str(names))
             if len(det):
-                det = det[det[:, 5] == 0]
-                if not len(det):  # Check if there are no detections with class index 0
+                det = det[(det[:, 5] == 16) | (det[:, 5] == 0) | (det[:, 5] == 15)]
+                if not len(det):  # Check if there are no detections with class index
                     continue
+
+                else: 
+                    count += 1
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round()
                 
@@ -238,6 +244,7 @@ def run(
 
         # Print time (inference-only)
         LOGGER.info(f"{s}{'' if len(det) else '(no detections), '}{dt[1].dt * 1E3:.1f}ms")
+        # print(count)
     return labels
 
     # Print results
@@ -253,7 +260,7 @@ def run(
 def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'yolov5s.pt', help='model path or triton URL')
-    parser.add_argument('--source', type=str, default=ROOT / '../img/2023-12-01-09-38-1701391111', help='file/dir/URL/glob/screen/0(webcam)')
+    parser.add_argument('--source', type=str, default=ROOT / '/', help='file/dir/URL/glob/screen/0(webcam)')
     parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='(optional) dataset.yaml path')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
@@ -286,25 +293,30 @@ def parse_opt():
     return opt
 
 
-def send_line_notify(notification_message, image_filepath):
+def send_line_notify_with_image(notification_message):
     """
     LINEに通知する
     """
     line_notify_token = 'kK1396TPpSv4YIRaM1qGprbuCLztiZoY4q6524ym9VB'
     line_notify_api = 'https://notify-api.line.me/api/notify'
     headers = {'Authorization': f'Bearer {line_notify_token}'}
-    data = {'message': f'message: {notification_message}'}
-    files = {'imageFile': open(image_filepath, 'rb')}
-    requests.post(line_notify_api, headers = headers, data = data, files=files)
+    data = {'message': notification_message}
+    requests.post(line_notify_api, headers=headers, data=data)
 
 def main(opt):
     check_requirements(ROOT / 'requirements.txt', exclude=('tensorboard', 'thop'))
     lavels = run(**vars(opt))
+
+    URL = f"127.0.0.1:5000/{opt.name}/"
     if "person" in labels:
-        send_line_notify("人いたわ")
+        send_line_notify_with_image(f"人が検出されました {URL}")
+    if "dog" in labels:
+        send_line_notify_with_image("犬が検出されました {URL}")
+
 
 if __name__ == '__main__':
     opt = parse_opt()
     main(opt)
+    subprocess.run(["python", "./webapp/app.py"])
 
 
