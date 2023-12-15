@@ -253,7 +253,7 @@ def run(
 def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'yolov5s.pt', help='model path or triton URL')
-    parser.add_argument('--source', type=str, default=ROOT / '/', help='file/dir/URL/glob/screen/0(webcam)')
+    parser.add_argument('--source', type=str, default=ROOT / '../img/2023-12-01-09-38-1701391111', help='file/dir/URL/glob/screen/0(webcam)')
     parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='(optional) dataset.yaml path')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
@@ -286,7 +286,7 @@ def parse_opt():
     return opt
 
 
-def send_line_notify(notification_message):
+def send_line_notify(notification_message, image_filepath):
     """
     LINEに通知する
     """
@@ -294,14 +294,14 @@ def send_line_notify(notification_message):
     line_notify_api = 'https://notify-api.line.me/api/notify'
     headers = {'Authorization': f'Bearer {line_notify_token}'}
     data = {'message': f'message: {notification_message}'}
-    requests.post(line_notify_api, headers = headers, data = data)
+    files = {'imageFile': open(image_filepath, 'rb')}
+    requests.post(line_notify_api, headers = headers, data = data, files=files)
 
 def main(opt):
     check_requirements(ROOT / 'requirements.txt', exclude=('tensorboard', 'thop'))
     lavels = run(**vars(opt))
     if "person" in labels:
         send_line_notify("人いたわ")
-
 
 if __name__ == '__main__':
     opt = parse_opt()

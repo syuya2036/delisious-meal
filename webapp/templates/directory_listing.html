@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Directory Listing</title>
+    <style>
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .image-container div {
+            margin-right: 10px; /* 画像間の余白 */
+        }
+        .image-container img {
+            width: 30em; /* 画像の幅 */
+            height: auto; /* 画像の高さは自動調整 */
+        }
+    </style>
+</head>
+<body>
+    <h1>Directory Listing for {{ req_path }}</h1>
+
+    <ul>
+        {% for directory in directories %}
+        <li><a href="{{ req_path }}/{{ directory }}">{{ directory }}/</a></li>
+        {% endfor %}
+    </ul>
+
+    <div class="image-container">
+        {% for file in files %}
+            <div>
+                <img src="{{ url_for('file', filename=req_path + '/' + file) }}" alt="{{ file }}">
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

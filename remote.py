@@ -223,7 +223,7 @@ while True:
         except:
             disconnect_wifi_mac()
         
-        subprocess.run(["python", "./object_recognition/car/yolov5/detect.py", "--source", f"./object_recognition/car/img/{current_time}"])
+        subprocess.run(["python", "./object_recognition/car/yolov5/detect.py", "--source", f"./object_recognition/car/img/{current_time}", "--name", current_time])
         break
     if event == "OK":
         msg = values[0]
@@ -250,11 +250,8 @@ while True:
         time.sleep(5)
     ###########################
 
-
     window["sent"].update(info.get_sent_command())
     window["recv"].update(info.get_command_result())
-
-
 
 info.stop()
 window.close()
