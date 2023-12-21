@@ -307,16 +307,13 @@ def main(opt):
     check_requirements(ROOT / 'requirements.txt', exclude=('tensorboard', 'thop'))
     lavels = run(**vars(opt))
 
-    URL = f"127.0.0.1:5000/{opt.name}/"
+    URL = f"http://127.0.0.1:5000/{opt.name}/"
     if "person" in labels:
         send_line_notify_with_image(f"人が検出されました {URL}")
     if "dog" in labels:
         send_line_notify_with_image("犬が検出されました {URL}")
 
-
 if __name__ == '__main__':
     opt = parse_opt()
     main(opt)
     subprocess.run(["python", "./webapp/app.py"])
-
-

@@ -24,9 +24,10 @@ $ pip install -r requirements.txt
 
 ### 4. yolo インストール
 object_recognition/carにyolov5をクローンして下さい．
-'''
+'''zsh
 $ cd object_recognition/car
 '''
+
 
 '''
 $ git clone https://github.com/ultralytics/yolov5
@@ -35,4 +36,6 @@ $ git clone https://github.com/ultralytics/yolov5
 ### 5. detect.pyの置換
 yolov5の中のdetect.pyをルートフォルダにあるdetect.pyに置き換えて下さい．
 
-### 6. 実行ファイルはremote.pyです．
+### 6. 実行ファイルはルートフォルダのremote.pyです．
+
+### 7. ドローンの接続を確立しないと実行できません．(画像解析だけ行いたい場合は，yolov5を実行するだけでいいです)
