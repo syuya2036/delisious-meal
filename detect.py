@@ -244,7 +244,7 @@ def run(
 
         # Print time (inference-only)
         LOGGER.info(f"{s}{'' if len(det) else '(no detections), '}{dt[1].dt * 1E3:.1f}ms")
-        # print(count)
+        print(count)
     return labels
 
     # Print results
@@ -309,10 +309,13 @@ def main(opt):
 
     URL = f"http://127.0.0.1:5000/{opt.name}/"
     if "person" in labels:
-        send_line_notify_with_image(f"人が検出されました {URL}")
-    if "dog" in labels:
-        send_line_notify_with_image("犬が検出されました {URL}")
-
+        if "dog" in labels:
+            send_line_notify_with_image(f"人や犬が検出されました {URL}")
+        else:
+            send_line_notify_with_image(f"人が検出されました {URL}")
+    elif "dog" in labels:
+        send_line_notify_with_image(f"犬が検出されました {URL}")
+    
 if __name__ == '__main__':
     opt = parse_opt()
     main(opt)
